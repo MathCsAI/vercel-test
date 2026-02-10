@@ -41,13 +41,13 @@ function stripCodeFences(text) {
 
 function normalizeSentiment(text) {
   const lowered = String(text || "").toLowerCase();
-  if (lowered.includes("enthusiastic") || lowered.includes("positive")) {
-    return "enthusiastic";
+  if (lowered.includes("positive")) {
+    return "positive";
   }
-  if (lowered.includes("critical") || lowered.includes("negative")) {
-    return "critical";
+  if (lowered.includes("negative")) {
+    return "negative";
   }
-  return "objective";
+  return "neutral";
 }
 
 async function loadStorage() {
@@ -75,7 +75,7 @@ async function analyzeWithGemini(text) {
   const prompt = [
     "You are a concise analyst.",
     "Summarize the text in 2-3 sentences.",
-    "Classify sentiment as enthusiastic, critical, or objective.",
+    "Classify sentiment as positive, negative, or neutral.",
     "Respond as JSON with keys: summary, sentiment.",
     "Text:",
     text
@@ -109,7 +109,7 @@ async function analyzeWithGemini(text) {
 
   if (!parsed || !parsed.summary) {
     return {
-      summary: responseText.trim(),
+      summary: responseText.trim() || "Analysis unavailable.",
       sentiment: normalizeSentiment(responseText)
     };
   }
@@ -198,8 +198,8 @@ module.exports = async (req, res) => {
       });
       response.items.push({
         original: comment.body,
-        analysis: "",
-        sentiment: "objective",
+        analysis: "Analysis unavailable.",
+        sentiment: "neutral",
         stored: false,
         timestamp: itemTimestamp
       });
