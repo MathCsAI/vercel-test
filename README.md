@@ -76,6 +76,7 @@ cp .env.example .env
 
 ```
 GEMINI_API_KEY=your_api_key_here
+GEMINI_MODEL=gemini-1.5-flash-latest
 ```
 
 4. Run locally (Vercel dev):

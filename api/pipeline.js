@@ -6,7 +6,7 @@ const SOURCE_URL = "https://jsonplaceholder.typicode.com/comments?postId=1";
 const DEFAULT_SOURCE = "JSONPlaceholder Comments";
 const MAX_ITEMS = 3;
 const STORAGE_PATH = process.env.VERCEL ? "/tmp/results.json" : path.join(process.cwd(), "data", "results.json");
-const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-1.5-flash-latest";
 const REQUEST_TIMEOUT_MS = 8000;
 
 function nowIso() {
@@ -65,18 +65,39 @@ async function analyzeWithGemini(text) {
   }
 
   const client = new GoogleGenerativeAI(apiKey);
-  const model = client.getGenerativeModel({ model: MODEL_NAME });
   const prompt = [
     "You are a concise analyst.",
-    "Summarize the text in 1-2 sentences.",
+    "Summarize the text in 2-3 sentences.",
     "Classify sentiment as enthusiastic, critical, or objective.",
     "Respond as JSON with keys: summary, sentiment.",
     "Text:",
     text
   ].join("\n");
 
-  const result = await model.generateContent(prompt);
-  const responseText = result.response.text();
+  const modelNames = Array.from(new Set([MODEL_NAME, "gemini-1.5-flash-latest", "gemini-1.5-flash"]))
+    .filter(Boolean);
+  let responseText = "";
+  let lastError = null;
+
+  for (const modelName of modelNames) {
+    try {
+      const model = client.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      responseText = result.response.text();
+      lastError = null;
+      break;
+    } catch (error) {
+      lastError = error;
+      if (!/not found|not supported/i.test(String(error.message || error))) {
+        break;
+      }
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+
   const parsed = safeJsonParse(responseText, null);
 
   if (!parsed || !parsed.summary) {
