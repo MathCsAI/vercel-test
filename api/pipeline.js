@@ -6,7 +6,7 @@ const SOURCE_URL = "https://jsonplaceholder.typicode.com/comments?postId=1";
 const DEFAULT_SOURCE = "JSONPlaceholder Comments";
 const MAX_ITEMS = 3;
 const STORAGE_PATH = process.env.VERCEL ? "/tmp/results.json" : path.join(process.cwd(), "data", "results.json");
-const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-3-pro-preview";
+const MODEL_NAME = process.env.GEMINI_MODEL || "google:gemma-3-27b-it";
 const REQUEST_TIMEOUT_MS = 8000;
 
 function nowIso() {
@@ -46,13 +46,13 @@ function stripCodeFences(text) {
 
 function normalizeSentiment(text) {
   const lowered = String(text || "").toLowerCase();
-  if (lowered.includes("positive") || lowered.includes("enthusiastic")) {
-    return "positive";
+  if (lowered.includes("enthusiastic") || lowered.includes("positive")) {
+    return "enthusiastic";
   }
-  if (lowered.includes("negative") || lowered.includes("critical")) {
-    return "negative";
+  if (lowered.includes("critical") || lowered.includes("negative")) {
+    return "critical";
   }
-  return "neutral";
+  return "objective";
 }
 
 async function loadStorage() {
@@ -80,7 +80,7 @@ async function analyzeWithGemini(text) {
   const prompt = [
     "You are a concise analyst.",
     "Summarize the text in 1-2 sentences.",
-    "Classify sentiment as positive, negative, or neutral.",
+    "Classify sentiment as enthusiastic, critical, or objective.",
     "Respond as JSON with keys: summary, sentiment.",
     "Text:",
     text
@@ -219,7 +219,7 @@ module.exports = async (req, res) => {
       response.items.push({
         original: comment.body,
         analysis: "Analysis unavailable.",
-        sentiment: "neutral",
+        sentiment: "objective",
         stored: false,
         timestamp: itemTimestamp
       });
@@ -267,7 +267,7 @@ module.exports = async (req, res) => {
       response.items.push({
         original: comment.body,
         analysis: "Analysis unavailable.",
-        sentiment: "neutral",
+        sentiment: "objective",
         stored: false,
         timestamp: itemTimestamp
       });
