@@ -6,7 +6,7 @@ const SOURCE_URL = "https://jsonplaceholder.typicode.com/comments?postId=1";
 const DEFAULT_SOURCE = "JSONPlaceholder Comments";
 const MAX_ITEMS = 3;
 const STORAGE_PATH = process.env.VERCEL ? "/tmp/results.json" : path.join(process.cwd(), "data", "results.json");
-const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-3-pro-preview";
 const REQUEST_TIMEOUT_MS = 8000;
 
 function nowIso() {
@@ -46,13 +46,13 @@ function stripCodeFences(text) {
 
 function normalizeSentiment(text) {
   const lowered = String(text || "").toLowerCase();
-  if (lowered.includes("enthusiastic") || lowered.includes("positive")) {
-    return "enthusiastic";
+  if (lowered.includes("positive") || lowered.includes("enthusiastic")) {
+    return "positive";
   }
-  if (lowered.includes("critical") || lowered.includes("negative")) {
-    return "critical";
+  if (lowered.includes("negative") || lowered.includes("critical")) {
+    return "negative";
   }
-  return "objective";
+  return "neutral";
 }
 
 async function loadStorage() {
@@ -80,13 +80,13 @@ async function analyzeWithGemini(text) {
   const prompt = [
     "You are a concise analyst.",
     "Summarize the text in 2-3 sentences.",
-    "Classify sentiment as enthusiastic, critical, or objective.",
+    "Classify sentiment as positive, negative, or neutral.",
     "Respond as JSON with keys: summary, sentiment.",
     "Text:",
     text
   ].join("\n");
 
-  const modelNames = Array.from(new Set([MODEL_NAME, "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-2-flash-latest", "gemini-2-flash","gemini-3-pro-preview","gemini-3-pro", "gemini-3-flash-latest", "gemini-3-flash"]))
+  const modelNames = Array.from(new Set([MODEL_NAME, "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-2-flash-latest", "gemini-2-flash","gemini-3-pro-preview","gemini-2.5-pro", "gemini-3-flash-latest", "gemini-3-flash","gemini-2.5-flash"]))
     .filter(Boolean);
   let responseText = "";
   let lastError = null;
@@ -219,7 +219,7 @@ module.exports = async (req, res) => {
       response.items.push({
         original: comment.body,
         analysis: "Analysis unavailable.",
-        sentiment: "objective",
+        sentiment: "neutral",
         stored: false,
         timestamp: itemTimestamp
       });
@@ -260,7 +260,7 @@ module.exports = async (req, res) => {
       response.items.push({
         original: comment.body,
         analysis: "Analysis unavailable.",
-        sentiment: "objective",
+        sentiment: "neutral",
         stored: false,
         timestamp: itemTimestamp
       });
