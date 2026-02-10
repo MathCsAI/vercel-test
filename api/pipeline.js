@@ -86,7 +86,21 @@ async function analyzeWithGemini(text) {
     text
   ].join("\n");
 
-  const modelNames = Array.from(new Set([MODEL_NAME, "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-2-flash-latest", "gemini-2-flash","gemini-3-pro-preview","gemini-2.5-pro", "gemini-3-flash-latest", "gemini-3-flash","gemini-2.5-flash"]))
+  const modelNames = Array.from(new Set([
+    MODEL_NAME,
+    "gemma-3-27b-it",
+    "gemma-3-12b-it",
+    "gemma-3-1b-it",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash",
+    "gemini-2-flash-latest",
+    "gemini-2-flash",
+    "gemini-3-pro-preview",
+    "gemini-2.5-pro",
+    "gemini-3-flash-latest",
+    "gemini-3-flash",
+    "gemini-2.5-flash"
+  ]))
     .filter(Boolean);
   let responseText = "";
   let lastError = null;
