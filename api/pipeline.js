@@ -6,7 +6,7 @@ const SOURCE_URL = "https://jsonplaceholder.typicode.com/comments?postId=1";
 const DEFAULT_SOURCE = "JSONPlaceholder Comments";
 const MAX_ITEMS = 3;
 const STORAGE_PATH = process.env.VERCEL ? "/tmp/results.json" : path.join(process.cwd(), "data", "results.json");
-const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-1.5-flash-latest";
+const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const REQUEST_TIMEOUT_MS = 8000;
 
 function nowIso() {
