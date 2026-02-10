@@ -32,6 +32,11 @@ function safeJsonParse(value, fallback = null) {
   }
 }
 
+function isQuotaError(error) {
+  const message = String(error?.message || error || "");
+  return /\b429\b|quota exceeded|rate limit/i.test(message);
+}
+
 function stripCodeFences(text) {
   if (typeof text !== "string") {
     return "";
@@ -167,9 +172,40 @@ module.exports = async (req, res) => {
   }
 
   const storedItems = await loadStorage();
+  const cachedById = new Map();
+  for (const item of storedItems) {
+    if (item && item.id != null) {
+      cachedById.set(item.id, item);
+    }
+  }
+  let quotaExceeded = false;
 
   for (const comment of comments) {
     const itemTimestamp = nowIso();
+    const cached = cachedById.get(comment.id);
+    if (cached) {
+      response.items.push({
+        original: cached.original || comment.body,
+        analysis: cached.analysis || "Analysis unavailable.",
+        sentiment: normalizeSentiment(cached.sentiment),
+        stored: true,
+        timestamp: cached.timestamp || itemTimestamp,
+        source: cached.source || sourceName
+      });
+      continue;
+    }
+
+    if (quotaExceeded) {
+      response.items.push({
+        original: comment.body,
+        analysis: "Analysis unavailable.",
+        sentiment: "objective",
+        stored: false,
+        timestamp: itemTimestamp
+      });
+      continue;
+    }
+
     try {
       const analysis = await analyzeWithGemini(comment.body);
       const enriched = {
@@ -192,11 +228,15 @@ module.exports = async (req, res) => {
         timestamp: itemTimestamp
       });
     } catch (error) {
-      response.errors.push({
-        stage: "analysis",
-        message: error.message,
-        itemId: comment.id
-      });
+      if (isQuotaError(error)) {
+        quotaExceeded = true;
+      } else {
+        response.errors.push({
+          stage: "analysis",
+          message: error.message,
+          itemId: comment.id
+        });
+      }
       response.items.push({
         original: comment.body,
         analysis: "Analysis unavailable.",
