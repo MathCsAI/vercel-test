@@ -32,15 +32,22 @@ function safeJsonParse(value, fallback = null) {
   }
 }
 
+function stripCodeFences(text) {
+  if (typeof text !== "string") {
+    return "";
+  }
+  return text.replace(/```json\s*|```/gi, "").trim();
+}
+
 function normalizeSentiment(text) {
-  const lowered = text.toLowerCase();
+  const lowered = String(text || "").toLowerCase();
   if (lowered.includes("enthusiastic") || lowered.includes("positive")) {
-    return "positive";
+    return "enthusiastic";
   }
   if (lowered.includes("critical") || lowered.includes("negative")) {
-    return "negative";
+    return "critical";
   }
-  return "neutral";
+  return "objective";
 }
 
 async function loadStorage() {
@@ -98,7 +105,7 @@ async function analyzeWithGemini(text) {
     throw lastError;
   }
 
-  const parsed = safeJsonParse(responseText, null);
+  const parsed = safeJsonParse(stripCodeFences(responseText), null);
 
   if (!parsed || !parsed.summary) {
     return {
@@ -192,7 +199,7 @@ module.exports = async (req, res) => {
       response.items.push({
         original: comment.body,
         analysis: "",
-        sentiment: "neutral",
+        sentiment: "objective",
         stored: false,
         timestamp: itemTimestamp
       });
