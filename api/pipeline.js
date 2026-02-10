@@ -253,6 +253,12 @@ module.exports = async (req, res) => {
     stored: Boolean(item.stored)
   }));
 
+  response.items.forEach(item => {
+    if (typeof item.stored === 'undefined') {
+      item.stored = false;
+    }
+  });
+
   try {
     await saveStorage(storedItems);
   } catch (error) {
