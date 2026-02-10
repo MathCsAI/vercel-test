@@ -79,7 +79,7 @@ async function analyzeWithGemini(text) {
   const client = new GoogleGenerativeAI(apiKey);
   const prompt = [
     "You are a concise analyst.",
-    "Summarize the text in 2-3 sentences.",
+    "Summarize the text in 1-2 sentences.",
     "Classify sentiment as positive, negative, or neutral.",
     "Respond as JSON with keys: summary, sentiment.",
     "Text:",
@@ -249,6 +249,13 @@ module.exports = async (req, res) => {
       });
     } catch (error) {
       if (isQuotaError(error)) {
+        if (!quotaExceeded) {
+          response.errors.push({
+            stage: "analysis",
+            message: "Rate limit or quota exceeded",
+            itemId: comment.id
+          });
+        }
         quotaExceeded = true;
       } else {
         response.errors.push({
