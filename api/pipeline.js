@@ -247,6 +247,11 @@ module.exports = async (req, res) => {
     }
   }
 
+  response.items = response.items.map((item) => ({
+    ...item,
+    stored: Boolean(item.stored)
+  }));
+
   try {
     await saveStorage(storedItems);
   } catch (error) {
