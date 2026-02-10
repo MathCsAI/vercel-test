@@ -188,6 +188,7 @@ module.exports = async (req, res) => {
         original: comment.body,
         analysis: analysis.summary,
         sentiment: analysis.sentiment,
+        stored: true,
         timestamp: itemTimestamp
       });
     } catch (error) {
