@@ -86,7 +86,7 @@ async function analyzeWithGemini(text) {
     text
   ].join("\n");
 
-  const modelNames = Array.from(new Set([MODEL_NAME, "gemini-1.5-flash-latest", "gemini-1.5-flash"]))
+  const modelNames = Array.from(new Set([MODEL_NAME, "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-2-flash-latest", "gemini-2-flash","gemini-3-pro-preview","gemini-3-pro", "gemini-3-flash-latest", "gemini-3-flash"]))
     .filter(Boolean);
   let responseText = "";
   let lastError = null;
@@ -175,7 +175,23 @@ module.exports = async (req, res) => {
     response.errors.push({ stage: "fetch", message: error.message, status: error.status || 500 });
   }
 
-  const storedItems = await loadStorage();
+  const loadedItems = await loadStorage();
+  const storedItems = (() => {
+    const seen = new Set();
+    const normalized = [];
+    for (const item of loadedItems) {
+      const id = item?.id;
+      if (id == null || seen.has(id)) {
+        continue;
+      }
+      seen.add(id);
+      normalized.push({
+        ...item,
+        stored: Boolean(item?.stored)
+      });
+    }
+    return normalized;
+  })();
   const cachedById = new Map();
   for (const item of storedItems) {
     if (item && item.id != null) {
@@ -262,8 +278,13 @@ module.exports = async (req, res) => {
     }
   });
 
+  const normalizedStoredItems = storedItems.map((item) => ({
+    ...item,
+    stored: Boolean(item?.stored)
+  }));
+
   try {
-    await saveStorage(storedItems);
+    await saveStorage(normalizedStoredItems);
   } catch (error) {
     response.errors.push({ stage: "storage", message: error.message });
   }
